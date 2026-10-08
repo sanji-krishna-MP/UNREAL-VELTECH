@@ -3,22 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/AppShell';
 import {
-  ShieldAlert,
-  Users,
-  CheckCircle2,
-  AlertTriangle,
   RotateCcw,
-  PlusCircle,
+  Plus,
   Info,
-  ExternalLink,
-  ChevronRight,
-  TrendingDown,
-  Layers,
   ArrowUpRight,
+  Shield,
+  Layers,
 } from 'lucide-react';
 import { HviMetrics } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 
 export default function OfficerDashboard() {
   const router = useRouter();
@@ -33,7 +28,6 @@ export default function OfficerDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // 1. Check session
       const authRes = await fetch('/api/auth/me');
       const authData = await authRes.json();
 
@@ -49,12 +43,11 @@ export default function OfficerDashboard() {
 
       setUser(authData.user);
 
-      // 2. Fetch Dashboard metrics
       const dashRes = await fetch('/api/dashboard');
       const dashData = await dashRes.json();
 
       if (!dashRes.ok) {
-        throw new Error(dashData.error || 'Failed to fetch dashboard data');
+        throw new Error(dashData.error || 'Failed to fetch dashboard telemetry');
       }
 
       setMetrics(dashData.metrics);
@@ -78,172 +71,197 @@ export default function OfficerDashboard() {
     fetchDashboardData();
   };
 
+  const headerActions = (
+    <div className="flex items-center gap-2.5">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleManualRefresh}
+        disabled={refreshing}
+        className="gap-1.5 text-xs text-zinc-300 hover:text-white"
+      >
+        <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+        <span>{refreshing ? 'Refreshing...' : 'Refresh Telemetry'}</span>
+      </Button>
+
+      <Button asChild size="sm" className="gap-1.5 text-xs font-medium">
+        <Link href="/campaigns/new">
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Simulation</span>
+        </Link>
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <Navbar user={user} />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono uppercase bg-cyan-950/80 text-cyan-400 border border-cyan-800/80 px-2 py-0.5 rounded">
-                COMMAND CENTER
-              </span>
-              <span className="text-xs text-slate-400">Live Organization Telemetry</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Human Vulnerability Console
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleManualRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-700 transition-colors disabled:opacity-50"
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh Telemetry'}
-            </button>
-
-            <Link
-              href="/campaigns/new"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-colors shadow-lg shadow-cyan-950"
-            >
-              <PlusCircle className="w-4 h-4" />
-              New Simulation
-            </Link>
-          </div>
+    <AppShell
+      user={user}
+      title="Security Overview"
+      breadcrumbs={[{ label: 'Command Center' }, { label: 'Security Overview' }]}
+      actions={headerActions}
+    >
+      <div className="space-y-8">
+        {/* Page Title & Context */}
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-100">
+            Human Vulnerability Console
+          </h1>
+          <p className="text-xs text-[#8B8B95]">
+            Observed organizational phishing telemetry and adaptive defense resilience.
+          </p>
         </div>
 
         {error && (
-          <div className="p-4 rounded-lg bg-red-950/40 border border-red-800 text-sm text-red-300 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
-            <span>{error}</span>
+          <div className="p-3.5 rounded-md bg-red-950/40 border border-red-800/80 text-xs text-red-300">
+            {error}
           </div>
         )}
 
-        {/* Top Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Main HVI Card */}
-          <div className="lg:col-span-2 cyber-card rounded-xl p-5 border border-slate-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
+        {/* Top 4 KPI Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* 1. Human Vulnerability Index */}
+          <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 flex flex-col justify-between">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Human Vulnerability Index (HVI)
+                <span className="text-xs font-medium text-[#8B8B95]">
+                  Human Vulnerability Index
                 </span>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  0–100 observed risk score; higher is greater vulnerability
+                <p className="text-[11px] text-[#8B8B95]/80 mt-0.5">
+                  Observed risk score (0–100)
                 </p>
               </div>
               <button
                 onClick={() => setShowFormulaModal(true)}
-                className="p-1 rounded text-slate-400 hover:text-cyan-400 hover:bg-slate-800/80 transition-colors"
-                title="View PRD Formula Details"
+                aria-label="View PRD formula calculation"
+                className="text-[#8B8B95] hover:text-zinc-200 transition-colors p-0.5"
               >
-                <Info className="w-4 h-4" />
+                <Info className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="mt-4 flex items-baseline gap-3">
-              <span className="text-4xl sm:text-5xl font-black tracking-tight text-white font-mono">
+            <div className="my-3 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-100 font-mono tabular-nums">
                 {metrics?.hvi !== null && metrics?.hvi !== undefined ? metrics.hvi : '—'}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-[#8B8B95]">
                 {metrics?.hvi === null ? 'Insufficient data' : '/ 100 benchmark'}
               </span>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-              <span>Eligible Evaluated Deliveries:</span>
-              <span className="font-mono text-cyan-300 font-medium">
+            <div className="pt-2.5 border-t border-[#28282D] flex items-center justify-between text-[11px] text-[#8B8B95]">
+              <span>Eligible deliveries:</span>
+              <span className="font-mono text-zinc-300 tabular-nums">
                 {metrics?.eligibleCount || 0}
               </span>
             </div>
           </div>
 
-          {/* Response Coverage */}
-          <div className="cyber-card rounded-xl p-5 border border-slate-800">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Response Coverage
-            </span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Interactions / launched</p>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight text-white font-mono">
+          {/* 2. Response Coverage */}
+          <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 flex flex-col justify-between">
+            <div>
+              <span className="text-xs font-medium text-[#8B8B95]">
+                Response Coverage
+              </span>
+              <p className="text-[11px] text-[#8B8B95]/80 mt-0.5">
+                Interactions / launched
+              </p>
+            </div>
+
+            <div className="my-3 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-100 font-mono tabular-nums">
                 {metrics?.responseCoverage !== null && metrics?.responseCoverage !== undefined
                   ? `${metrics.responseCoverage}%`
                   : '—'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-800">
-              {metrics?.interactionCount || 0} of {metrics?.launchedCount || 0} participants
-            </p>
+
+            <div className="pt-2.5 border-t border-[#28282D] flex items-center justify-between text-[11px] text-[#8B8B95]">
+              <span>Participants:</span>
+              <span className="font-mono text-zinc-300 tabular-nums">
+                {metrics?.interactionCount || 0} of {metrics?.launchedCount || 0}
+              </span>
+            </div>
           </div>
 
-          {/* Click Rate */}
-          <div className="cyber-card rounded-xl p-5 border border-slate-800">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Click Failure Rate
-            </span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Clicks / eligible</p>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight text-red-400 font-mono">
+          {/* 3. Click Failure Rate */}
+          <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 flex flex-col justify-between">
+            <div>
+              <span className="text-xs font-medium text-[#8B8B95]">
+                Click Failure Rate
+              </span>
+              <p className="text-[11px] text-[#8B8B95]/80 mt-0.5">
+                Clicks / eligible
+              </p>
+            </div>
+
+            <div className="my-3 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-bold tracking-tight text-red-400 font-mono tabular-nums">
                 {metrics?.clickRate !== null && metrics?.clickRate !== undefined
                   ? `${metrics.clickRate}%`
                   : '—'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-800">
-              {metrics?.clickedCount || 0} failed simulations
-            </p>
+
+            <div className="pt-2.5 border-t border-[#28282D] flex items-center justify-between text-[11px] text-[#8B8B95]">
+              <span>Failed actions:</span>
+              <span className="font-mono text-red-400 tabular-nums">
+                {metrics?.clickedCount || 0} clicks recorded
+              </span>
+            </div>
           </div>
 
-          {/* Training Completion */}
-          <div className="cyber-card rounded-xl p-5 border border-slate-800">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Micro-Training
-            </span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Completed / assigned</p>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight text-emerald-400 font-mono">
-                {metrics?.trainingCompletionRate !== null &&
-                metrics?.trainingCompletionRate !== undefined
+          {/* 4. Micro-Training */}
+          <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 flex flex-col justify-between">
+            <div>
+              <span className="text-xs font-medium text-[#8B8B95]">
+                Micro-Training Remediation
+              </span>
+              <p className="text-[11px] text-[#8B8B95]/80 mt-0.5">
+                Completed / assigned
+              </p>
+            </div>
+
+            <div className="my-3 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-bold tracking-tight text-emerald-400 font-mono tabular-nums">
+                {metrics?.trainingCompletionRate !== null && metrics?.trainingCompletionRate !== undefined
                   ? `${metrics.trainingCompletionRate}%`
                   : '—'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-3 pt-2 border-t border-slate-800">
-              {metrics?.trainingCompletedCount || 0} of {metrics?.trainingTotalCount || 0} resolved
-            </p>
+
+            <div className="pt-2.5 border-t border-[#28282D] flex items-center justify-between text-[11px] text-[#8B8B95]">
+              <span>Remediated:</span>
+              <span className="font-mono text-emerald-400 tabular-nums">
+                {metrics?.trainingCompletedCount || 0} of {metrics?.trainingTotalCount || 0}
+              </span>
+            </div>
           </div>
         </div>
 
         {/* PRD Formula Modal */}
         {showFormulaModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-            <div className="cyber-card rounded-xl max-w-lg w-full p-6 border border-cyan-500/40 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Info className="w-5 h-5 text-cyan-400" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+            <div className="bg-[#111113] rounded-lg max-w-lg w-full p-6 border border-[#28282D] shadow-2xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#28282D]">
+                <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+                  <Info className="w-4 h-4 text-zinc-400" />
                   PRD Human Vulnerability Formula
                 </h3>
                 <button
                   onClick={() => setShowFormulaModal(false)}
-                  className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-slate-800"
+                  className="text-xs text-[#8B8B95] hover:text-white px-2 py-1 rounded bg-[#1B1B1F] border border-[#28282D]"
                 >
                   Close
                 </button>
               </div>
 
-              <div className="text-xs text-slate-300 space-y-3">
+              <div className="text-xs text-zinc-300 space-y-3">
                 <p>
                   A delivery represents one employee’s participation in one launched campaign.
                   Eligible deliveries have interacted OR passed the response deadline.
                 </p>
 
-                <div className="bg-slate-900 rounded-lg p-3 border border-slate-800 space-y-1.5 font-mono text-[11px]">
+                <div className="bg-[#09090B] rounded p-3 border border-[#28282D] space-y-1.5 font-mono text-[11px]">
                   <div className="flex justify-between text-red-300">
                     <span>Any simulated link click:</span>
                     <span className="font-bold">100 risk pts</span>
@@ -252,17 +270,17 @@ export default function OfficerDashboard() {
                     <span>Otherwise any report:</span>
                     <span className="font-bold">0 risk pts</span>
                   </div>
-                  <div className="flex justify-between text-yellow-300">
+                  <div className="flex justify-between text-amber-300">
                     <span>Otherwise opened only:</span>
                     <span className="font-bold">25 risk pts</span>
                   </div>
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between text-[#8B8B95]">
                     <span>Expired without interaction:</span>
                     <span className="font-bold">0 risk pts</span>
                   </div>
                 </div>
 
-                <p className="text-slate-400 italic">
+                <p className="text-[#8B8B95] italic">
                   * Note: Unexpired untouched deliveries are excluded from the denominator.
                   Clicks take precedence over reports. Completed training does not erase historical failures.
                 </p>
@@ -271,56 +289,62 @@ export default function OfficerDashboard() {
           </div>
         )}
 
-        {/* Department Breakdown */}
-        <div className="cyber-card rounded-xl p-6 border border-slate-800 space-y-4">
+        {/* Department Vulnerability Profiles */}
+        <div className="rounded-lg bg-[#111113] border border-[#28282D] p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-cyan-400" />
-              Department Vulnerability Profiles
-            </h2>
-            <span className="text-xs text-slate-400 font-mono">Live Relational Aggregates</span>
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-100">
+                Department Vulnerability Profiles
+              </h2>
+              <p className="text-xs text-[#8B8B95] mt-0.5">
+                Aggregated cohort breakdown across active corporate units.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono text-[#8B8B95]">
+              Live Aggregates
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {departmentStats.length === 0 ? (
-              <p className="text-xs text-slate-500 py-4">No department simulations evaluated yet.</p>
+              <p className="text-xs text-[#8B8B95] py-4">No department simulations evaluated yet.</p>
             ) : (
               departmentStats.map((dept) => (
                 <div
                   key={dept.name}
-                  className="bg-slate-900/60 rounded-lg p-4 border border-slate-800/80 space-y-3"
+                  className="bg-[#09090B] rounded-md p-4 border border-[#28282D] space-y-3"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-white text-sm">{dept.name}</h3>
-                      <p className="text-[11px] text-slate-500">
+                      <h3 className="font-medium text-zinc-200 text-sm">{dept.name}</h3>
+                      <p className="text-[11px] text-[#8B8B95]">
                         {dept.launchedCount} launched simulations
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs text-slate-400">HVI</span>
-                      <div className="text-lg font-mono font-bold text-cyan-300">
+                      <span className="text-[10px] text-[#8B8B95] uppercase font-mono">HVI Score</span>
+                      <div className="text-base font-mono font-bold text-zinc-100 tabular-nums">
                         {dept.hvi !== null ? dept.hvi : '—'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px]">
+                  <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-[#28282D] text-xs">
                     <div>
-                      <span className="text-slate-500">Coverage:</span>
-                      <p className="font-mono text-slate-200">
+                      <span className="text-[11px] text-[#8B8B95]">Coverage</span>
+                      <p className="font-mono text-zinc-300 mt-0.5 tabular-nums">
                         {dept.coverageRate !== null ? `${dept.coverageRate}%` : '—'}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Clicks:</span>
-                      <p className="font-mono text-red-400">
+                      <span className="text-[11px] text-[#8B8B95]">Click Rate</span>
+                      <p className="font-mono text-red-400 mt-0.5 tabular-nums">
                         {dept.clickRate !== null ? `${dept.clickRate}%` : '—'}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Training:</span>
-                      <p className="font-mono text-emerald-400">
+                      <span className="text-[11px] text-[#8B8B95]">Training</span>
+                      <p className="font-mono text-emerald-400 mt-0.5 tabular-nums">
                         {dept.trainingCompletionRate !== null
                           ? `${dept.trainingCompletionRate}%`
                           : '—'}
@@ -333,77 +357,84 @@ export default function OfficerDashboard() {
           </div>
         </div>
 
-        {/* Campaigns Table */}
-        <div className="cyber-card rounded-xl p-6 border border-slate-800 space-y-4">
+        {/* Simulated Defense Campaigns Table */}
+        <div className="rounded-lg bg-[#111113] border border-[#28282D] p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-cyan-400" />
-              Simulated Defense Campaigns
-            </h2>
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-100">
+                Simulated Defense Campaigns
+              </h2>
+              <p className="text-xs text-[#8B8B95] mt-0.5">
+                Active and completed mock phishing engagements.
+              </p>
+            </div>
             <Link
               href="/campaigns/new"
-              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium"
+              className="text-xs text-zinc-300 hover:text-white flex items-center gap-1 font-medium transition-colors"
             >
-              Configure New <ChevronRight className="w-3.5 h-3.5" />
+              New campaign &rarr;
             </Link>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
-                  <th className="py-3 px-3">Campaign Title</th>
-                  <th className="py-3 px-3">Scenario</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3">Difficulty</th>
-                  <th className="py-3 px-3">Deliveries</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
+                <tr className="border-b border-[#28282D] text-[#8B8B95] font-medium">
+                  <th className="py-2.5 px-3">Campaign Title</th>
+                  <th className="py-2.5 px-3">Scenario</th>
+                  <th className="py-2.5 px-3">Status</th>
+                  <th className="py-2.5 px-3">Difficulty</th>
+                  <th className="py-2.5 px-3">Deliveries</th>
+                  <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#28282D]/70">
                 {campaigns.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-500">
-                      No campaigns yet. Click &quot;New Simulation&quot; to configure your first campaign.
+                    <td colSpan={6} className="py-8 text-center text-[#8B8B95]">
+                      No active campaigns yet. Click &quot;New Simulation&quot; to configure your first campaign.
                     </td>
                   </tr>
                 ) : (
                   campaigns.map((camp) => (
-                    <tr key={camp.id} className="hover:bg-slate-900/40 transition-colors">
-                      <td className="py-3.5 px-3 font-medium text-white">
-                        <Link href={`/campaigns/${camp.id}`} className="hover:underline text-slate-200">
+                    <tr key={camp.id} className="hover:bg-[#1B1B1F]/40 transition-colors">
+                      <td className="py-3 px-3">
+                        <Link
+                          href={`/campaigns/${camp.id}`}
+                          className="font-medium text-zinc-200 hover:underline"
+                        >
                           {camp.title}
                         </Link>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-[#8B8B95] mt-0.5">
                           Deadline: {new Date(camp.response_deadline).toLocaleDateString()}
                         </p>
                       </td>
-                      <td className="py-3.5 px-3 text-slate-300 font-mono text-[11px]">
+                      <td className="py-3 px-3 text-zinc-300 font-mono text-[11px]">
                         {camp.scenario}
                       </td>
-                      <td className="py-3.5 px-3">
+                      <td className="py-3 px-3">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${
+                          className={`px-2 py-0.5 rounded text-[10px] font-medium uppercase border ${
                             camp.status === 'launched'
-                              ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/60'
-                              : 'bg-yellow-950/40 text-yellow-300 border-yellow-800/60'
+                              ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/80'
+                              : 'bg-amber-950/40 text-amber-300 border-amber-800/80'
                           }`}
                         >
                           {camp.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-3 capitalize text-slate-300 font-mono text-[11px]">
+                      <td className="py-3 px-3 capitalize text-zinc-300">
                         {camp.default_difficulty}
                       </td>
-                      <td className="py-3.5 px-3 text-slate-400 font-mono">
+                      <td className="py-3 px-3 text-zinc-300 font-mono tabular-nums">
                         {camp.deliveries?.length || 0}
                       </td>
-                      <td className="py-3.5 px-3 text-right">
+                      <td className="py-3 px-3 text-right">
                         <Link
                           href={`/campaigns/${camp.id}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-400 text-xs border border-slate-800 transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#1B1B1F] hover:bg-[#25252A] text-zinc-200 text-xs border border-[#28282D] transition-colors"
                         >
-                          Inspect <ArrowUpRight className="w-3 h-3" />
+                          Inspect <ArrowUpRight className="w-3 h-3 text-[#8B8B95]" />
                         </Link>
                       </td>
                     </tr>
@@ -413,7 +444,7 @@ export default function OfficerDashboard() {
             </table>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

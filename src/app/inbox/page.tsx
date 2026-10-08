@@ -3,25 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/AppShell';
 import {
-  Inbox,
   Mail,
   MailOpen,
-  AlertTriangle,
-  CheckCircle2,
-  ShieldAlert,
-  ChevronRight,
-  BookOpen,
-  Clock,
   RotateCcw,
+  BookOpen,
+  ChevronRight,
+  AlertTriangle,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function EmployeeInboxPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchInbox = async () => {
@@ -49,6 +47,7 @@ export default function EmployeeInboxPage() {
       setError(e.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -56,116 +55,131 @@ export default function EmployeeInboxPage() {
     fetchInbox();
   }, []);
 
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    fetchInbox();
+  };
+
   // Check for any pending training assignment
-  const pendingAssignment = deliveries.flatMap((d) => d.assignments || []).find((a: any) => a.status === 'assigned');
+  const pendingAssignment = deliveries
+    .flatMap((d) => d.assignments || [])
+    .find((a: any) => a.status === 'assigned');
+
+  const headerActions = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleManualRefresh}
+      disabled={refreshing}
+      className="gap-1.5 text-xs text-zinc-300 hover:text-white"
+    >
+      <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+      <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+    </Button>
+  );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <Navbar user={user} />
-
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono uppercase bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-2 py-0.5 rounded">
-                SECURE WORKSPACE
-              </span>
-              <span className="text-xs text-slate-400">Internal Communications Portal</span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-              <Inbox className="w-6 h-6 text-cyan-400" />
-              Corporate Inbox
-            </h1>
-          </div>
-
-          <button
-            onClick={fetchInbox}
-            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-xs flex items-center gap-1.5 transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> Refresh
-          </button>
+    <AppShell
+      user={user}
+      title="My Inbox"
+      breadcrumbs={[{ label: 'Workspace' }, { label: 'My Inbox' }]}
+      actions={headerActions}
+    >
+      <div className="space-y-6">
+        {/* Header Title */}
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+            My Inbox
+          </h1>
+          <p className="text-xs text-[#8B8B95]">
+            Internal communications and corporate service notifications.
+          </p>
         </div>
 
-        {/* Pending Training Callout Banner */}
+        {/* Pending Training Remediation Callout Banner */}
         {pendingAssignment && (
-          <div className="p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-cyan-950/50">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shrink-0">
-                <BookOpen className="w-5 h-5" />
+          <div className="rounded-lg bg-[#141416] border border-[#28282D] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2 rounded-md bg-[#1B1B1F] border border-[#28282D] text-zinc-200 shrink-0">
+                <BookOpen className="w-4 h-4" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Action Required: Micro-Training Assigned</h3>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  You triggered a simulated spear-phishing test link. Complete the 3-question lesson to reinforce cyber hygiene.
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-semibold text-zinc-100">
+                  Action Required: Security Micro-Lesson Assigned
+                </h3>
+                <p className="text-xs text-[#8B8B95] leading-relaxed">
+                  A simulated security verification link was triggered. Complete the short 3-question lesson to reinforce hygiene.
                 </p>
               </div>
             </div>
-            <Link
-              href={`/training/${pendingAssignment.id}`}
-              className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-semibold shrink-0 transition-colors shadow-md text-center"
-            >
-              Start Training Now &rarr;
-            </Link>
+
+            <Button asChild size="sm" className="shrink-0 text-xs font-medium bg-zinc-100 text-zinc-900 hover:bg-white">
+              <Link href={`/training/${pendingAssignment.id}`}>
+                Start Training &rarr;
+              </Link>
+            </Button>
           </div>
         )}
 
         {error && (
-          <div className="p-3.5 rounded-lg bg-red-950/40 border border-red-800 text-xs text-red-300 flex items-center gap-2">
+          <div className="p-3.5 rounded-md bg-red-950/40 border border-red-800/80 text-xs text-red-300 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-400" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Deliveries List */}
-        <div className="cyber-card rounded-xl border border-slate-800 overflow-hidden">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/40 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+        {/* Messages List Container */}
+        <div className="rounded-lg bg-[#111113] border border-[#28282D] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#28282D] flex items-center justify-between text-xs text-[#8B8B95]">
+            <span className="font-medium">
               Received Messages ({deliveries.length})
             </span>
-            <span className="text-[11px] text-slate-500 font-mono">
-              Role: {user?.employee?.job_role || 'Employee'}
+            <span className="font-mono text-[11px]">
+              {user?.employee?.department?.name || 'Department'} · {user?.employee?.job_role || 'Employee'}
             </span>
           </div>
 
           {deliveries.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
-              <Mail className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              Your inbox is empty. No simulation messages currently active for your cohort.
+            <div className="py-16 text-center text-[#8B8B95] text-xs space-y-2">
+              <Mail className="w-7 h-7 mx-auto opacity-40 text-zinc-400" />
+              <p>Your inbox is empty. No simulation messages currently active for your cohort.</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-800/80">
+            <div className="divide-y divide-[#28282D]/70">
               {deliveries.map((del) => {
                 const events = del.events || [];
                 const hasClick = events.some((e: any) => e.type === 'clicked');
                 const hasReport = events.some((e: any) => e.type === 'reported');
                 const hasOpen = events.some((e: any) => e.type === 'opened');
-                const assignment = del.assignments?.[0];
 
                 return (
                   <Link
                     key={del.id}
                     href={`/inbox/${del.id}`}
-                    className="block p-4 sm:p-5 hover:bg-slate-900/60 transition-colors group"
+                    className="block p-4 sm:p-5 hover:bg-[#1B1B1F]/40 transition-colors group"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3.5">
+                      <div className="flex items-start gap-3.5 min-w-0">
                         <div
-                          className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-                            hasOpen
-                              ? 'bg-slate-900 text-slate-500 border border-slate-800'
-                              : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
+                          className={`p-2 rounded-md shrink-0 mt-0.5 border ${
+                            hasOpen || hasClick
+                              ? 'bg-[#141416] text-[#8B8B95] border-[#28282D]'
+                              : 'bg-[#1B1B1F] text-zinc-200 border-zinc-600'
                           }`}
                         >
-                          {hasOpen ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                          {hasOpen || hasClick ? (
+                            <MailOpen className="w-4 h-4" />
+                          ) : (
+                            <Mail className="w-4 h-4" />
+                          )}
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold text-slate-200">
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-zinc-300">
                               Enterprise System Notification
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                            <span className="text-[11px] text-[#8B8B95] font-mono tabular-nums">
                               {new Date(del.created_at).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -174,35 +188,37 @@ export default function EmployeeInboxPage() {
                           </div>
 
                           <h3
-                            className={`text-sm tracking-tight ${
-                              hasOpen ? 'font-normal text-slate-300' : 'font-semibold text-white'
+                            className={`text-sm tracking-tight truncate ${
+                              hasOpen || hasClick
+                                ? 'font-normal text-zinc-300'
+                                : 'font-medium text-zinc-100'
                             }`}
                           >
                             {del.subject}
                           </h3>
 
-                          <p className="text-xs text-slate-400 mt-1 line-clamp-1">
-                            {del.body ? del.body.slice(0, 80) + '...' : 'System notification'}
+                          <p className="text-xs text-[#8B8B95] line-clamp-1">
+                            {del.body ? del.body.slice(0, 85) + '...' : 'System notification'}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
                         {hasReport ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium border bg-emerald-950/40 text-emerald-300 border-emerald-800/80">
                             REPORTED SAFE
                           </span>
                         ) : hasOpen || hasClick ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-900 text-slate-400 border border-slate-800">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium border bg-[#1B1B1F] text-[#8B8B95] border-[#28282D]">
                             OPENED
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-cyan-950/60 text-cyan-300 border border-cyan-800">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium border bg-zinc-800/60 text-zinc-200 border-zinc-700">
                             UNREAD
                           </span>
                         )}
 
-                        <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-400 transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-[#8B8B95] group-hover:text-zinc-200 transition-colors" />
                       </div>
                     </div>
                   </Link>
@@ -211,7 +227,7 @@ export default function EmployeeInboxPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

@@ -2,20 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/AppShell';
 import Link from 'next/link';
 import {
-  ArrowLeft,
-  ShieldAlert,
   Flag,
   AlertTriangle,
   CheckCircle2,
   ExternalLink,
   BookOpen,
-  Mail,
-  User,
-  Clock,
+  Shield,
+  ArrowLeft,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 function DeliveryDetailContent() {
   const params = useParams();
@@ -28,7 +26,7 @@ function DeliveryDetailContent() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Simulation Alert Modal State
+  // Simulation Alert Modal / Banner State
   const [simulationAlert, setSimulationAlert] = useState<{
     visible: boolean;
     assignmentId?: string;
@@ -106,7 +104,7 @@ function DeliveryDetailContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to process click');
 
-      // Reveal immediate simulation awareness alert!
+      // Reveal immediate simulation awareness alert
       setSimulationAlert({
         visible: true,
         assignmentId: data.assignment_id,
@@ -122,7 +120,7 @@ function DeliveryDetailContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs">
+      <div className="min-h-screen bg-[#09090B] flex items-center justify-center text-xs text-[#8B8B95]">
         Loading message...
       </div>
     );
@@ -133,96 +131,98 @@ function DeliveryDetailContent() {
   const hasReported = events.some((e: any) => e.type === 'reported');
   const assignment = delivery?.assignments?.[0];
 
+  const scenario = delivery?.campaign?.scenario?.toLowerCase() || '';
+  const isPayroll = scenario.includes('payroll');
+
+  const ctaButtonText = isPayroll
+    ? 'Review Direct Deposit Account Details'
+    : 'Verify Engineering SSH Key & Repo Permissions';
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <Navbar user={user} />
-
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/inbox"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Return to Inbox
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-slate-500 uppercase">
-              DELIVERY ID: {deliveryId.slice(0, 8)}
-            </span>
-          </div>
-        </div>
-
+    <AppShell
+      user={user}
+      title="Message Preview"
+      breadcrumbs={[
+        { label: 'My Inbox', href: '/inbox' },
+        { label: delivery?.subject ? delivery.subject.slice(0, 30) + '...' : 'Message' },
+      ]}
+    >
+      <div className="max-w-3xl mx-auto space-y-6">
         {error && (
-          <div className="p-3.5 rounded-lg bg-red-950/40 border border-red-800 text-xs text-red-300 flex items-center gap-2">
+          <div className="p-3.5 rounded-md bg-red-950/40 border border-red-800/80 text-xs text-red-300 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-400" />
             <span>{error}</span>
           </div>
         )}
 
         {reportFeedback && (
-          <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/60 text-xs text-emerald-300 flex items-start gap-3 shadow-lg shadow-emerald-950/40">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-lg bg-emerald-950/40 border border-emerald-800/80 text-xs text-emerald-300 flex items-start gap-3">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block text-emerald-200">Simulation Successfully Defended</span>
-              <p className="mt-0.5 text-slate-200">{reportFeedback}</p>
+              <span className="font-semibold block text-emerald-200">
+                Threat Successfully Flagged
+              </span>
+              <p className="mt-0.5 text-zinc-300">{reportFeedback}</p>
             </div>
           </div>
         )}
 
-        {/* Active Simulation Alert Banner if already clicked */}
+        {/* Controlled Simulation Awareness Callout if Clicked */}
         {(simulationAlert.visible || hasClicked) && (
-          <div className="p-5 rounded-xl bg-red-950/40 border-2 border-red-500/80 text-xs text-red-200 space-y-3 shadow-xl shadow-red-950/50">
-            <div className="flex items-center gap-2 text-red-400 font-bold uppercase tracking-wider text-sm">
-              <ShieldAlert className="w-5 h-5" />
-              Security Notice: This Was a Controlled Simulation
+          <div className="p-5 rounded-lg bg-[#141416] border border-[#28282D] text-xs space-y-3">
+            <div className="flex items-center gap-2 text-red-400 font-semibold text-xs uppercase tracking-wider">
+              <AlertTriangle className="w-4 h-4" />
+              Security Notice: Controlled Simulation Exercise
             </div>
-            <p className="text-slate-300 leading-relaxed">
-              You clicked a harmless simulated spear-phishing test link. In an actual cyber attack,
-              this action could have compromised employee credentials or internal systems.
-              To strengthen resilience, a short 3-question micro-training lesson has been assigned to your profile.
+            <p className="text-zinc-300 leading-relaxed">
+              You selected a simulated spear-phishing test link. In an actual cyber incident,
+              this action could compromise credentials or sensitive organizational assets.
+              To reinforce resilience, a short 3-question micro-training lesson has been assigned to your profile.
             </p>
-            <div className="pt-2">
-              <Link
-                href={`/training/${simulationAlert.assignmentId || assignment?.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md transition-all"
-              >
-                <BookOpen className="w-4 h-4" />
-                Launch Assigned Micro-Training &rarr;
-              </Link>
+            <div className="pt-1">
+              <Button asChild size="sm" className="gap-2 bg-zinc-100 text-zinc-900 hover:bg-white text-xs font-medium">
+                <Link href={`/training/${simulationAlert.assignmentId || assignment?.id}`}>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Launch Assigned Micro-Training &rarr;
+                </Link>
+              </Button>
             </div>
           </div>
         )}
 
         {delivery && (
-          <div className="cyber-card rounded-xl border border-slate-800 overflow-hidden shadow-2xl">
+          <div className="rounded-lg bg-[#111113] border border-[#28282D] overflow-hidden">
             {/* Email Header Chrome */}
-            <div className="p-5 sm:p-6 bg-slate-900/60 border-b border-slate-800/90 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            <div className="p-6 bg-[#141416] border-b border-[#28282D] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <h1 className="text-lg font-semibold text-zinc-100 tracking-tight">
                   {delivery.subject}
                 </h1>
-                <div className="flex items-center gap-2">
-                  <button
+                <div className="shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={handleReport}
                     disabled={actionLoading || hasReported}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition-colors disabled:opacity-50"
+                    className="gap-1.5 text-xs text-zinc-300 hover:text-white"
                   >
-                    <Flag className="w-3.5 h-3.5 text-yellow-400" />
-                    {hasReported ? 'Reported as Threat' : 'Report Phishing'}
-                  </button>
+                    <Flag className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{hasReported ? 'Reported as Threat' : 'Report Phishing'}</span>
+                  </Button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-3 border-t border-[#28282D] text-[#8B8B95]">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">From:</span>
-                  <span className="text-slate-300 font-mono">
+                  <span>From:</span>
+                  <span className="text-zinc-300 font-mono">
                     Enterprise Portal &lt;notifications-verify@internal-dispatch.portal&gt;
                   </span>
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
-                  <span className="text-slate-500 font-medium">Recipient:</span>
-                  <span className="text-slate-300 font-medium">
+                  <span>Recipient:</span>
+                  <span className="text-zinc-200 font-medium">
                     {delivery.employee?.display_name || user?.email}
                   </span>
                 </div>
@@ -231,37 +231,35 @@ function DeliveryDetailContent() {
 
             {/* Email Body: Rendered as Plain Text */}
             <div className="p-6 sm:p-8 space-y-6">
-              <div className="font-mono text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-wrap select-text bg-slate-900/30 p-5 rounded-lg border border-slate-800/60">
+              <div className="font-mono text-xs sm:text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap select-text bg-[#09090B] p-5 rounded border border-[#28282D]">
                 {delivery.body}
               </div>
 
               {/* Controlled Action CTA Button */}
-              <div className="pt-4 border-t border-slate-800/80 flex flex-col items-center justify-center p-6 bg-slate-900/40 rounded-xl border border-slate-800 text-center space-y-3">
-                <p className="text-xs text-slate-400">
+              <div className="pt-4 border-t border-[#28282D] flex flex-col items-center justify-center p-6 bg-[#141416] rounded-md border border-[#28282D] text-center space-y-3">
+                <p className="text-xs text-[#8B8B95]">
                   Select the requested verification action to process your employee request:
                 </p>
 
-                <button
+                <Button
                   type="button"
                   onClick={handleSimulatedClick}
                   disabled={actionLoading}
-                  className="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs tracking-wide uppercase transition-all shadow-lg shadow-cyan-950 disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-zinc-100 text-zinc-900 hover:bg-white text-xs font-semibold uppercase tracking-wider gap-2 shadow-sm"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  {delivery.campaign?.scenario?.includes('payroll')
-                    ? 'Review Direct Deposit Account Ledger'
-                    : 'Verify Developer SSH Key & Permissions'}
-                </button>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>{ctaButtonText}</span>
+                </Button>
 
-                <span className="text-[10px] text-slate-500">
+                <span className="text-[10px] text-[#8B8B95] font-mono">
                   Official Internal Gateway Action • Controlled Verification Link
                 </span>
               </div>
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
@@ -269,7 +267,7 @@ export default function DeliveryDetailPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs">
+        <div className="min-h-screen bg-[#09090B] flex items-center justify-center text-xs text-[#8B8B95]">
           Loading message...
         </div>
       }

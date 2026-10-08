@@ -2,21 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
+import { AppShell } from '@/components/AppShell';
 import {
-  ShieldAlert,
-  Sparkles,
   Save,
   Send,
   AlertCircle,
   CheckCircle2,
-  Calendar,
-  Layers,
+  Sparkles,
   ArrowLeft,
-  Bot,
+  RotateCcw,
   FileText,
 } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function NewCampaignPage() {
   const router = useRouter();
@@ -90,7 +88,7 @@ export default function NewCampaignPage() {
     setGenerating(true);
     setError(null);
 
-    const targetDept = departments.find((d) => d.name.toLowerCase().includes(dept.toLowerCase()));
+    const targetDept = departments.find((d) => d.name?.toLowerCase().includes(dept.toLowerCase()));
 
     try {
       const res = await fetch('/api/campaigns/generate', {
@@ -134,7 +132,7 @@ export default function NewCampaignPage() {
 
     try {
       const targetDept = departments.find((d) =>
-        d.name.toLowerCase().includes(department.toLowerCase())
+        d.name?.toLowerCase().includes(department.toLowerCase())
       );
 
       let safeDeadline = new Date(Date.now() + 7 * 86400000).toISOString();
@@ -149,7 +147,7 @@ export default function NewCampaignPage() {
         body: JSON.stringify({
           title,
           scenario,
-          target_department_id: targetDept?.id || null,
+          target_department_id: targetDept?.id || department,
           default_difficulty: difficulty,
           response_deadline: safeDeadline,
           generation_mode: generationMode,
@@ -175,7 +173,7 @@ export default function NewCampaignPage() {
         throw new Error(errDetail || data.error || 'Failed to save draft');
       }
 
-      setSuccessMsg('Draft saved successfully! You can launch it now or return to console.');
+      setSuccessMsg('Draft saved successfully.');
       router.push(`/campaigns/${data.campaign.id}`);
     } catch (e: any) {
       setError(e.message || 'Failed to save draft');
@@ -195,7 +193,7 @@ export default function NewCampaignPage() {
 
     try {
       const targetDept = departments.find((d) =>
-        d.name.toLowerCase().includes(department.toLowerCase())
+        d.name?.toLowerCase().includes(department.toLowerCase())
       );
 
       let safeDeadline = new Date(Date.now() + 7 * 86400000).toISOString();
@@ -211,7 +209,7 @@ export default function NewCampaignPage() {
         body: JSON.stringify({
           title,
           scenario,
-          target_department_id: targetDept?.id || null,
+          target_department_id: targetDept?.id || department,
           default_difficulty: difficulty,
           response_deadline: safeDeadline,
           generation_mode: generationMode,
@@ -256,70 +254,61 @@ export default function NewCampaignPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <Navbar user={user} />
-
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono uppercase bg-slate-800 text-slate-300 px-2 py-0.5 rounded">
-              CAMPAIGN BUILDER
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+    <AppShell
+      user={user}
+      title="Configure Simulation"
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Configure Simulation' },
+      ]}
+    >
+      <div className="space-y-6">
+        {/* Page Heading */}
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
             Configure Role-Specific Simulation
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Build and deploy adaptive mock phishing scenarios to measure and elevate organizational security.
+          <p className="text-xs text-[#8B8B95]">
+            Target employee cohorts with adaptive mock phishing templates to evaluate organizational baseline.
           </p>
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-lg bg-red-950/40 border border-red-800 text-xs text-red-300 flex items-center gap-2.5">
+          <div className="p-3.5 rounded-md bg-red-950/40 border border-red-800/80 text-xs text-red-300 flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-800 text-xs text-emerald-300 flex items-center gap-2.5">
+          <div className="p-3.5 rounded-md bg-emerald-950/40 border border-emerald-800/80 text-xs text-emerald-300 flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* Builder Form Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left Column: Settings */}
-          <div className="md:col-span-1 space-y-5">
-            <div className="cyber-card rounded-xl p-5 border border-slate-800 space-y-4">
-              <h2 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-cyan-400" />
+        {/* 2-Column Desktop Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Targeting & Cohort Parameters */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 space-y-4">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-[#8B8B95]">
                 Cohort Targeting
               </h2>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              {/* Department Selector */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Target Department
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => handleDepartmentChange('Payroll')}
-                    className={`py-2 px-3 text-xs rounded-lg font-medium border transition-colors ${
+                    className={`py-2 px-3 text-xs rounded-md font-medium border transition-colors ${
                       department === 'Payroll'
-                        ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/40'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#1B1B1F] text-zinc-100 border-zinc-400'
+                        : 'bg-[#09090B] border-[#28282D] text-[#8B8B95] hover:text-zinc-200'
                     }`}
                   >
                     Payroll
@@ -327,10 +316,10 @@ export default function NewCampaignPage() {
                   <button
                     type="button"
                     onClick={() => handleDepartmentChange('Engineering')}
-                    className={`py-2 px-3 text-xs rounded-lg font-medium border transition-colors ${
+                    className={`py-2 px-3 text-xs rounded-md font-medium border transition-colors ${
                       department === 'Engineering'
-                        ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/40'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#1B1B1F] text-zinc-100 border-zinc-400'
+                        : 'bg-[#09090B] border-[#28282D] text-[#8B8B95] hover:text-zinc-200'
                     }`}
                   >
                     Engineering
@@ -338,19 +327,21 @@ export default function NewCampaignPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              {/* Scenario Template (read-only indicator) */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Scenario Template
                 </label>
-                <div className="bg-slate-900/90 rounded-lg p-2.5 border border-slate-800 text-xs font-mono text-slate-200">
+                <div className="bg-[#09090B] rounded-md p-2.5 border border-[#28282D] text-xs font-mono text-zinc-300">
                   {scenario === 'payroll_direct_deposit'
                     ? 'Direct Deposit Fraud & Wire Redirection'
                     : 'Mock Repository SSH & Access Review'}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              {/* Difficulty Dropdown */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Difficulty Level
                 </label>
                 <select
@@ -360,7 +351,7 @@ export default function NewCampaignPage() {
                     setDifficulty(diff);
                     handleGenerate(department, scenario, diff);
                   }}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#09090B] border border-[#28282D] rounded-md px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-400"
                 >
                   <option value="introductory">Introductory (Baseline)</option>
                   <option value="intermediate">Intermediate (Subtle Hooks)</option>
@@ -368,73 +359,75 @@ export default function NewCampaignPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              {/* Response Deadline */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Response Window Deadline
                 </label>
                 <input
                   type="datetime-local"
                   value={responseDeadline}
                   onChange={(e) => setResponseDeadline(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#09090B] border border-[#28282D] rounded-md px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-400"
                 />
               </div>
 
-              {/* Adaptation Card */}
+              {/* Adaptation Logic */}
               {adaptationExplanation && (
-                <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-800/40 text-[11px] text-cyan-300 space-y-1">
-                  <div className="font-semibold flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Adaptive Cohort Logic:
+                <div className="p-3 rounded-md bg-[#1B1B1F] border border-[#28282D] text-[11px] text-zinc-300 space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5 text-zinc-200">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    Adaptive Cohort Logic
                   </div>
-                  <p className="text-slate-300">{adaptationExplanation}</p>
+                  <p className="text-[#8B8B95] leading-relaxed">{adaptationExplanation}</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right Column: Content Editor & Preview */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="cyber-card rounded-xl p-5 border border-slate-800 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          {/* Right Column: Message Content Editor & Controls */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#28282D]">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  <FileText className="w-4 h-4 text-[#8B8B95]" />
+                  <span className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
                     Message Content Editor
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded border bg-slate-900 text-cyan-400 border-cyan-800/60">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#28282D] bg-[#09090B] text-zinc-400">
                     {generationMode}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleGenerate(department, scenario, difficulty)}
                     disabled={generating}
-                    className="p-1.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs transition-colors flex items-center gap-1"
-                    title="Regenerate message"
+                    className="flex items-center gap-1 text-[11px] text-[#8B8B95] hover:text-zinc-200 transition-colors disabled:opacity-50"
                   >
-                    <Bot className="w-3.5 h-3.5" />
-                    {generating ? 'Generating...' : 'Regenerate'}
+                    <RotateCcw className={`w-3 h-3 ${generating ? 'animate-spin' : ''}`} />
+                    Regenerate
                   </button>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+              {/* Campaign Title */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Campaign Title
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Targeted Payroll Direct Deposit Simulation"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  placeholder="e.g. Q4 Engineering SSH Review Simulation"
+                  className="w-full bg-[#09090B] border border-[#28282D] rounded-md px-3 py-2 text-xs text-zinc-100 placeholder-[#8B8B95] focus:outline-none focus:border-zinc-400"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+              {/* Email Subject Line */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Email Subject Line
                 </label>
                 <input
@@ -442,49 +435,51 @@ export default function NewCampaignPage() {
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Subject line..."
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-medium"
+                  className="w-full bg-[#09090B] border border-[#28282D] rounded-md px-3 py-2 text-xs text-zinc-100 font-mono placeholder-[#8B8B95] focus:outline-none focus:border-zinc-400"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+              {/* Email Body */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-zinc-300">
                   Email Body (Rendered as Plain Text)
                 </label>
                 <textarea
-                  rows={8}
+                  rows={9}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  placeholder="Simulation copy..."
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono leading-relaxed"
+                  placeholder="Simulation message copy..."
+                  className="w-full bg-[#09090B] border border-[#28282D] rounded-md p-3 text-xs text-zinc-200 placeholder-[#8B8B95] focus:outline-none focus:border-zinc-400 font-mono leading-relaxed"
                 />
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
-                <button
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#28282D]">
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleSaveDraft}
                   disabled={saving || launching}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-800 transition-colors disabled:opacity-50"
+                  className="gap-1.5 text-xs text-zinc-300 hover:text-white"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  {saving ? 'Saving Draft...' : 'Save Draft'}
-                </button>
+                  {saving ? 'Saving...' : 'Save Draft'}
+                </Button>
 
-                <button
+                <Button
                   type="button"
                   onClick={handleDirectLaunch}
                   disabled={launching || saving}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 text-xs font-semibold shadow-md shadow-cyan-950 transition-all disabled:opacity-50"
+                  className="gap-1.5 text-xs font-medium bg-zinc-100 text-zinc-900 hover:bg-white"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {launching ? 'Deploying...' : 'Launch Simulation'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
