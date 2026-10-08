@@ -20,7 +20,7 @@ import {
 function DeliveryDetailContent() {
   const params = useParams();
   const router = useRouter();
-  const deliveryId = params.id as string;
+  const deliveryId = (params?.deliveryId || params?.id) as string;
 
   const [user, setUser] = useState<any>(null);
   const [delivery, setDelivery] = useState<any>(null);

@@ -182,21 +182,17 @@ export default function EmployeeInboxPage() {
                           </h3>
 
                           <p className="text-xs text-slate-400 mt-1 line-clamp-1">
-                            {del.campaign?.title || 'System notification'}
+                            {del.body ? del.body.slice(0, 80) + '...' : 'System notification'}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
-                        {hasClick ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-950/60 text-red-300 border border-red-800">
-                            SIMULATION FAILED
-                          </span>
-                        ) : hasReport ? (
+                        {hasReport ? (
                           <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800">
                             REPORTED SAFE
                           </span>
-                        ) : hasOpen ? (
+                        ) : hasOpen || hasClick ? (
                           <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-900 text-slate-400 border border-slate-800">
                             OPENED
                           </span>
