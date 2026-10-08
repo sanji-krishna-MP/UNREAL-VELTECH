@@ -327,11 +327,13 @@ export default function OfficerDashboard() {
               department="Payroll"
               summary={PAYROLL_SAMPLE_SUMMARY}
               dailyCohorts={payrollCohorts}
+              defaultView="trend"
             />
             <DepartmentRiskChart
               department="Engineering"
               summary={ENGINEERING_SAMPLE_SUMMARY}
               dailyCohorts={engineeringCohorts}
+              defaultView="outcomes"
             />
           </div>
 
