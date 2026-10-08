@@ -30,33 +30,10 @@ export async function POST(request: Request) {
     let user = authData?.user;
 
     if (authError || !user) {
-      // Auto-provision demo users if not yet created in Supabase Auth
-      const isDemoUser = [
-        'officer@cybershield.internal',
-        'payroll.alex@cybershield.internal',
-        'eng.devon@cybershield.internal',
-      ].includes(email.toLowerCase());
-
-      if (isDemoUser && password === 'CyberShield2026!') {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (!signUpError && signUpData.user) {
-          user = signUpData.user;
-          // Re-sign in to establish session cookies
-          const { data: reAuth } = await supabase.auth.signInWithPassword({ email, password });
-          if (reAuth?.user) user = reAuth.user;
-        }
-      }
-
-      if (!user) {
-        return NextResponse.json(
-          { error: 'Invalid credentials. Check email and password.' },
-          { status: 401 }
-        );
-      }
+      return NextResponse.json(
+        { error: 'Invalid credentials. Check email and password.' },
+        { status: 401 }
+      );
     }
 
     // Retrieve user profile to determine role

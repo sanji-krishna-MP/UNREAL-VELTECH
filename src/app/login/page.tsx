@@ -50,7 +50,8 @@ export default function LoginPage() {
 
   const fillCredentials = (demoEmail: string) => {
     setEmail(demoEmail);
-    setPassword('CyberShield2026!');
+    // Security: Do not autofill fixed demo passwords in the public UI
+    setPassword('');
     setError(null);
   };
 

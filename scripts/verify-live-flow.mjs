@@ -34,7 +34,7 @@ async function verify() {
   console.log('▶ STEP 1: Testing Officer Login...');
   const { data: officerAuth, error: officerLoginErr } = await officerClient.auth.signInWithPassword({
     email: 'officer@cybershield.internal',
-    password: 'CyberShield2026!',
+    password: process.env.DEMO_OFFICER_PASSWORD || process.env.DEMO_PASSWORD || 'CyberShield2026!',
   });
 
   if (officerLoginErr || !officerAuth?.user) {
@@ -140,7 +140,7 @@ async function verify() {
   console.log('\n▶ STEP 5: Testing Employee Login & Isolated Inbox...');
   const { data: empAuth, error: empLoginErr } = await employeeClient.auth.signInWithPassword({
     email: 'payroll.alex@cybershield.internal',
-    password: 'CyberShield2026!',
+    password: process.env.DEMO_EMPLOYEE_PASSWORD || process.env.DEMO_PASSWORD || 'CyberShield2026!',
   });
 
   if (empLoginErr || !empAuth?.user) {

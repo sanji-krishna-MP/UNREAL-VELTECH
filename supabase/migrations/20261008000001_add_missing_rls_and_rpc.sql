@@ -210,6 +210,11 @@ BEGIN
         RAISE EXCEPTION 'Unauthorized: Only security officers can launch campaigns';
     END IF;
 
+    -- Caller identity check
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_id THEN
+        RAISE EXCEPTION 'Caller identity mismatch: caller is not authorized for target user';
+    END IF;
+
     -- Fetch campaign and ensure draft status
     SELECT * INTO v_campaign
     FROM public.campaigns
@@ -318,6 +323,11 @@ BEGIN
 
     IF v_employee IS NULL THEN
         RAISE EXCEPTION 'Unauthorized: User does not own this delivery record';
+    END IF;
+
+    -- Caller identity check
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_id THEN
+        RAISE EXCEPTION 'Caller identity mismatch: caller is not authorized for target user';
     END IF;
 
     -- 1. Insert Click Event (Atomic, Idempotent)

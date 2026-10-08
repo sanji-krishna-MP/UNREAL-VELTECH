@@ -173,14 +173,32 @@ CREATE POLICY "Users view own org" ON public.organizations FOR SELECT TO authent
 
 DROP POLICY IF EXISTS "Users view own profile" ON public.profiles;
 CREATE POLICY "Users view own profile" ON public.profiles FOR SELECT TO authenticated USING (
-    user_id = auth.uid() OR
-    EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = auth.uid() AND p.role = 'officer' AND p.organization_id = profiles.organization_id)
+    user_id = auth.uid()
+);
+
+DROP POLICY IF EXISTS "Users insert own profile" ON public.profiles;
+CREATE POLICY "Users insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (
+    user_id = auth.uid()
+);
+
+DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
+CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE TO authenticated USING (
+    user_id = auth.uid()
 );
 
 DROP POLICY IF EXISTS "View deliveries policy" ON public.deliveries;
 CREATE POLICY "View deliveries policy" ON public.deliveries FOR SELECT TO authenticated USING (
     employee_id IN (SELECT id FROM public.employees WHERE user_id = auth.uid())
     OR
+    EXISTS (
+        SELECT 1 FROM public.campaigns c
+        JOIN public.profiles p ON p.organization_id = c.organization_id
+        WHERE c.id = deliveries.campaign_id AND p.user_id = auth.uid() AND p.role = 'officer'
+    )
+);
+
+DROP POLICY IF EXISTS "Officers insert deliveries" ON public.deliveries;
+CREATE POLICY "Officers insert deliveries" ON public.deliveries FOR INSERT TO authenticated WITH CHECK (
     EXISTS (
         SELECT 1 FROM public.campaigns c
         JOIN public.profiles p ON p.organization_id = c.organization_id
@@ -217,6 +235,9 @@ CREATE POLICY "View training assignments" ON public.training_assignments FOR SEL
                 WHERE c.id = d.campaign_id AND p.user_id = auth.uid() AND p.role = 'officer'
             )
         )
+    )
+);
+
 -- Departments Policy
 DROP POLICY IF EXISTS "Users view own org departments" ON public.departments;
 CREATE POLICY "Users view own org departments" ON public.departments
@@ -392,6 +413,10 @@ DECLARE
     v_variants JSONB;
     v_matched_variant JSONB;
 BEGIN
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_id THEN
+        RAISE EXCEPTION 'Unauthorized: Caller identity does not match specified user ID';
+    END IF;
+
     SELECT role, organization_id INTO v_role, v_org_id
     FROM public.profiles
     WHERE user_id = p_user_id;
@@ -486,6 +511,10 @@ DECLARE
     v_module_id UUID;
     v_assignment_id UUID;
 BEGIN
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_id THEN
+        RAISE EXCEPTION 'Unauthorized: Caller identity does not match specified user ID';
+    END IF;
+
     SELECT d.*, c.scenario INTO v_delivery
     FROM public.deliveries d
     JOIN public.campaigns c ON c.id = d.campaign_id
@@ -694,7 +723,9 @@ VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '{"q1": 1, "q2": 1, "q3": 2}'::j
 ON CONFLICT (module_id) DO UPDATE SET correct_answers = EXCLUDED.correct_answers;
 
 -- ============================================================================
--- AUTH USERS & PROFILES SEEDING (Password for all 3 accounts: CyberShield2026!)
+-- AUTH USERS & PROFILES SEEDING
+-- Set passwords via environment variable / npm run seed:users, or configure
+-- your private password below before running in Supabase SQL editor.
 -- ============================================================================
 
 DO $$
@@ -702,7 +733,9 @@ DECLARE
     v_officer_id UUID := '99999999-9999-9999-9999-999999999901';
     v_alex_id UUID := '99999999-9999-9999-9999-999999999902';
     v_devon_id UUID := '99999999-9999-9999-9999-999999999903';
-    v_encrypted_pwd TEXT := crypt('CyberShield2026!', gen_salt('bf'));
+    -- Configure your private demo password here or seed securely via node scripts/seed-users.mjs
+    v_demo_password TEXT := coalesce(nullif(current_setting('app.demo_password', true), ''), 'SET_SECURE_PASSWORD_HERE');
+    v_encrypted_pwd TEXT := crypt(v_demo_password, gen_salt('bf'));
 BEGIN
     -- 1. Officer: officer@cybershield.internal
     IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'officer@cybershield.internal') THEN

@@ -34,10 +34,20 @@ const ORG_ID = '00000000-0000-0000-0000-000000000001';
 const PAYROLL_DEPT_ID = '11111111-1111-1111-1111-111111111111';
 const ENG_DEPT_ID = '22222222-2222-2222-2222-222222222222';
 
+import crypto from 'crypto';
+
+const defaultDemoPassword = process.env.DEMO_PASSWORD || process.env.DEMO_USER_PASSWORD;
+const generatedPassword = !defaultDemoPassword ? `CS-${crypto.randomBytes(8).toString('hex')}!9` : null;
+const resolvedPassword = defaultDemoPassword || generatedPassword;
+
+if (generatedPassword) {
+  console.log(`\n[SECURITY] No DEMO_PASSWORD provided in environment. Auto-generated secure credential for rotation: ${generatedPassword}\n`);
+}
+
 const SEED_USERS = [
   {
     email: 'officer@cybershield.internal',
-    password: process.env.DEMO_OFFICER_PASSWORD || 'CyberShield2026!',
+    password: process.env.DEMO_OFFICER_PASSWORD || resolvedPassword,
     role: 'officer',
     displayName: 'Chief Security Officer Morgan',
     jobRole: 'Director of Information Security',
@@ -45,7 +55,7 @@ const SEED_USERS = [
   },
   {
     email: 'payroll.alex@cybershield.internal',
-    password: process.env.DEMO_EMPLOYEE_PASSWORD || 'CyberShield2026!',
+    password: process.env.DEMO_EMPLOYEE_PASSWORD || resolvedPassword,
     role: 'employee',
     displayName: 'Alex Rivera',
     jobRole: 'Payroll Specialist',
@@ -53,7 +63,7 @@ const SEED_USERS = [
   },
   {
     email: 'eng.devon@cybershield.internal',
-    password: process.env.DEMO_EMPLOYEE_PASSWORD || 'CyberShield2026!',
+    password: process.env.DEMO_EMPLOYEE_PASSWORD || resolvedPassword,
     role: 'employee',
     displayName: 'Devon Vance',
     jobRole: 'Senior Staff Engineer',
