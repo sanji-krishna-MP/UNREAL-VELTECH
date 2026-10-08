@@ -8,17 +8,27 @@ export const dynamic = 'force-dynamic';
 const updateDraftSchema = z.object({
   title: z.string().optional(),
   scenario: z.string().optional(),
-  target_department_id: z.string().uuid().nullable().optional(),
+  target_department_id: z
+    .union([z.string().uuid(), z.literal(''), z.null()])
+    .optional()
+    .transform((v) => (v && v.trim() !== '' ? v : null)),
   default_difficulty: z.enum(['introductory', 'intermediate', 'advanced']).optional(),
-  response_deadline: z.string().datetime().optional(),
+  response_deadline: z
+    .string()
+    .optional()
+    .transform((v) => {
+      if (!v) return undefined;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? undefined : d.toISOString();
+    }),
   variants: z
     .array(
       z.object({
-        job_role: z.string(),
-        department_name: z.string(),
-        subject: z.string(),
-        body: z.string(),
-        adaptation_reason: z.string().optional(),
+        job_role: z.string().optional(),
+        department_name: z.string().optional(),
+        subject: z.string().min(1),
+        body: z.string().min(1),
+        adaptation_reason: z.string().nullable().optional(),
       })
     )
     .optional(),

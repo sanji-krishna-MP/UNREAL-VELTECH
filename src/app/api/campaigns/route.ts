@@ -6,21 +6,32 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 const createCampaignSchema = z.object({
-  title: z.string().min(1),
-  scenario: z.string().min(1),
-  target_department_id: z.string().uuid().nullable().optional(),
+  title: z.string().min(1, 'Title is required'),
+  scenario: z.string().min(1, 'Scenario is required'),
+  target_department_id: z
+    .union([z.string().uuid(), z.literal(''), z.null()])
+    .optional()
+    .transform((v) => (v && v.trim() !== '' ? v : null)),
   default_difficulty: z.enum(['introductory', 'intermediate', 'advanced']),
-  response_deadline: z.string().datetime(),
+  response_deadline: z.string().transform((v) => {
+    const d = new Date(v);
+    return isNaN(d.getTime())
+      ? new Date(Date.now() + 7 * 86400000).toISOString()
+      : d.toISOString();
+  }),
   generation_mode: z.string().default('Template mode'),
-  variants: z.array(
-    z.object({
-      job_role: z.string(),
-      department_name: z.string(),
-      subject: z.string(),
-      body: z.string(),
-      adaptation_reason: z.string().optional(),
-    })
-  ),
+  variants: z
+    .array(
+      z.object({
+        job_role: z.string().optional().default('Employee'),
+        department_name: z.string().optional().default('General'),
+        subject: z.string().min(1, 'Subject is required'),
+        body: z.string().min(1, 'Body is required'),
+        adaptation_reason: z.string().nullable().optional(),
+      })
+    )
+    .optional()
+    .default([]),
 });
 
 export async function POST(request: Request) {

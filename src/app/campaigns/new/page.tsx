@@ -137,6 +137,12 @@ export default function NewCampaignPage() {
         d.name.toLowerCase().includes(department.toLowerCase())
       );
 
+      let safeDeadline = new Date(Date.now() + 7 * 86400000).toISOString();
+      if (responseDeadline) {
+        const d = new Date(responseDeadline);
+        if (!isNaN(d.getTime())) safeDeadline = d.toISOString();
+      }
+
       const res = await fetch('/api/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,7 +151,7 @@ export default function NewCampaignPage() {
           scenario,
           target_department_id: targetDept?.id || null,
           default_difficulty: difficulty,
-          response_deadline: new Date(responseDeadline).toISOString(),
+          response_deadline: safeDeadline,
           generation_mode: generationMode,
           variants: [
             {
@@ -160,7 +166,14 @@ export default function NewCampaignPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save draft');
+      if (!res.ok) {
+        const errDetail = data.details?.fieldErrors
+          ? Object.entries(data.details.fieldErrors)
+              .map(([f, errs]: any) => `${f}: ${errs.join(', ')}`)
+              .join('; ')
+          : null;
+        throw new Error(errDetail || data.error || 'Failed to save draft');
+      }
 
       setSuccessMsg('Draft saved successfully! You can launch it now or return to console.');
       router.push(`/campaigns/${data.campaign.id}`);
@@ -185,6 +198,12 @@ export default function NewCampaignPage() {
         d.name.toLowerCase().includes(department.toLowerCase())
       );
 
+      let safeDeadline = new Date(Date.now() + 7 * 86400000).toISOString();
+      if (responseDeadline) {
+        const d = new Date(responseDeadline);
+        if (!isNaN(d.getTime())) safeDeadline = d.toISOString();
+      }
+
       // 1. Create draft
       const draftRes = await fetch('/api/campaigns', {
         method: 'POST',
@@ -194,7 +213,7 @@ export default function NewCampaignPage() {
           scenario,
           target_department_id: targetDept?.id || null,
           default_difficulty: difficulty,
-          response_deadline: new Date(responseDeadline).toISOString(),
+          response_deadline: safeDeadline,
           generation_mode: generationMode,
           variants: [
             {
@@ -209,7 +228,14 @@ export default function NewCampaignPage() {
       });
 
       const draftData = await draftRes.json();
-      if (!draftRes.ok) throw new Error(draftData.error || 'Failed to initialize draft for launch');
+      if (!draftRes.ok) {
+        const errDetail = draftData.details?.fieldErrors
+          ? Object.entries(draftData.details.fieldErrors)
+              .map(([f, errs]: any) => `${f}: ${errs.join(', ')}`)
+              .join('; ')
+          : null;
+        throw new Error(errDetail || draftData.error || 'Failed to initialize draft for launch');
+      }
 
       const campaignId = draftData.campaign.id;
 
