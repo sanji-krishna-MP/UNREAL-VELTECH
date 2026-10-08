@@ -7,10 +7,8 @@ import { Button } from '@/components/ui/button';
 
 /**
  * Animated Flowing Silver Ribbon Artwork
- * Features two overlapping groups of 32 smooth SVG cubic curves each (~64 paths total).
- * Curves enter from beyond the left edge, sweep gracefully through the middle/lower panel,
- * and flow toward the lower-right edge with varied curvature, spacing, silver stroke (#D4D4D8),
- * 0.25–0.55 stroke opacity, and 0.7–1.4px stroke widths.
+ * High visibility, bold stroke widths (1.8px–3.8px), high opacity (0.55–0.92),
+ * and complete full-span SVG curves sweeping across the entire left panel.
  */
 const RibbonContourGroup = ({
   groupIndex,
@@ -24,38 +22,36 @@ const RibbonContourGroup = ({
 
   const paths = React.useMemo(() => {
     return Array.from({ length: count }, (_, i) => {
-      // Offset calculations to create layered flowing ribbons
-      const offsetFactor = i / count;
-      const groupShift = groupIndex === 1 ? 0 : 45;
+      const t = i / count;
+      const groupShift = groupIndex === 1 ? 0 : 60;
 
-      // Cubic Bézier curve entering beyond the left edge (-120 to -60)
-      // sweeping through middle/lower panel, and exiting toward lower-right (1000 to 1100, 650 to 800)
-      const startX = -120 - i * 4;
-      const startY = 80 + i * 14 + groupShift;
+      // Span curves across the entire height (-50 to 950) and width of the panel
+      const startX = -180 - i * 6;
+      const startY = -40 + i * 30 + groupShift;
 
-      const cp1X = 220 + i * 8 - (groupIndex === 1 ? 20 : 0);
-      const cp1Y = 240 + i * 9 + (groupIndex === 1 ? 10 : -25);
+      const cp1X = 260 + i * 14 - (groupIndex === 1 ? 30 : -20);
+      const cp1Y = 180 + i * 26 + (groupIndex === 1 ? 20 : -40);
 
-      const cp2X = 520 - i * 6 + groupShift;
-      const cp2Y = 460 + i * 8;
+      const cp2X = 580 - i * 8 + groupShift;
+      const cp2Y = 480 + i * 24;
 
-      const endX = 1050 + i * 8;
-      const endY = 560 + i * 11 + groupShift;
+      const endX = 1180 + i * 8;
+      const endY = 580 + i * 22 + groupShift;
 
       const d = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
-      
-      // Stroke widths from 0.7px to 1.4px
-      const strokeWidth = 0.75 + offsetFactor * 0.65;
-      
-      // Stroke opacity tuned between 0.25 and 0.52 for visible, elegant silver lines
-      const opacity = 0.24 + offsetFactor * 0.28;
+
+      // BOLD stroke widths: 2.0px to 3.8px
+      const strokeWidth = 2.0 + t * 1.8;
+
+      // STRONG, VISIBLE opacity: 0.55 to 0.92
+      const opacity = 0.55 + t * 0.37;
 
       return {
         id: `${groupIndex}-${i}`,
         d,
         strokeWidth,
         opacity,
-        duration: baseDuration + ((i * 7) % 7) * 0.8,
+        duration: baseDuration + ((i * 5) % 6) * 1.2,
       };
     });
   }, [groupIndex, baseDuration]);
@@ -64,25 +60,24 @@ const RibbonContourGroup = ({
     <svg
       className="absolute inset-0 h-full w-full pointer-events-none select-none"
       fill="none"
-      viewBox="0 0 1000 700"
-      preserveAspectRatio="xMidYMid slice"
+      viewBox="0 0 1000 1000"
+      preserveAspectRatio="none"
       aria-hidden="true"
     >
       {paths.map((p) => (
         <motion.path
           key={p.id}
           d={p.d}
-          stroke="#D4D4D8"
+          stroke={groupIndex === 1 ? '#E4E4E7' : '#FFFFFF'}
           strokeWidth={p.strokeWidth}
           strokeOpacity={p.opacity}
           strokeLinecap="round"
-          initial={reduceMotion ? { pathLength: 1, pathOffset: 0 } : { pathLength: 0.35, pathOffset: 0 }}
+          initial={{ pathLength: 1, pathOffset: 0 }}
           animate={
             reduceMotion
               ? undefined
               : {
-                  pathLength: [0.35, 0.95, 0.35],
-                  pathOffset: [0, 1, 0],
+                  pathOffset: [0, 1],
                 }
           }
           transition={
@@ -91,7 +86,7 @@ const RibbonContourGroup = ({
               : {
                   duration: p.duration,
                   repeat: Number.POSITIVE_INFINITY,
-                  ease: 'easeInOut',
+                  ease: 'linear',
                 }
           }
         />
@@ -123,47 +118,37 @@ export function Login03View({
 }: LoginProps) {
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#09090B] lg:grid lg:grid-cols-2">
-      {/* Left Charcoal Brand Panel with Enhanced Silver Ribbon Artwork */}
+      {/* Left Charcoal Brand Panel with Bold Flowing Silver Ribbon Artwork */}
       <aside className="relative hidden h-full flex-col justify-between overflow-hidden border-r border-[#28282D] bg-[#141416] p-12 xl:p-14 lg:flex">
-        {/* Layer 1 & 2: Overlapping Flowing Silver Curves (68 paths total) */}
+        {/* Layer 1 & 2: Overlapping Flowing Silver Curves (68 bold paths total) */}
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Group 1: Cycle ~22–26s */}
+          {/* Group 1: 34 bold silver paths, cycle 24s */}
           <RibbonContourGroup groupIndex={1} baseDuration={24} />
-          {/* Group 2: Cycle ~27–31s */}
+          {/* Group 2: 34 crisp platinum paths, cycle 28s */}
           <RibbonContourGroup groupIndex={2} baseDuration={28} />
         </div>
 
-        {/* Localized Readability Gradient behind quote */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'linear-gradient(to bottom, rgba(20,20,22,0.1) 0%, rgba(20,20,22,0.4) 50%, rgba(20,20,22,0.85) 90%, #141416 100%)',
-          }}
-        />
-
         {/* Top Brand Identity */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-[#1B1B1F] border border-[#28282D] flex items-center justify-center text-zinc-100 shadow-sm">
+          <div className="w-8 h-8 rounded-md bg-[#1B1B1F]/90 backdrop-blur-md border border-[#28282D] flex items-center justify-center text-zinc-100 shadow-md">
             <Shield className="w-4 h-4" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">
+            <span className="text-sm font-semibold tracking-tight text-zinc-100 drop-shadow-sm">
               CyberShield
             </span>
-            <span className="text-[11px] text-[#8B8B95]">
+            <span className="text-[11px] text-zinc-400 drop-shadow-sm font-mono">
               Human Risk & Awareness
             </span>
           </div>
         </div>
 
-        {/* Serif Statement at Lower Portion (Intentional 2-3 line layout) */}
-        <figure className="relative z-10 mt-auto flex flex-col gap-4 max-w-lg">
-          <blockquote className="font-serif text-3xl xl:text-4xl 2xl:text-[44px] leading-[1.22] tracking-tight text-zinc-100 drop-shadow-sm">
+        {/* Serif Statement at Lower Portion with Frost Card for Readability */}
+        <figure className="relative z-10 mt-auto flex flex-col gap-4 max-w-lg p-6 sm:p-7 rounded-xl bg-[#141416]/85 backdrop-blur-md border border-[#28282D]/70 shadow-2xl">
+          <blockquote className="font-serif text-3xl xl:text-4xl 2xl:text-[42px] leading-[1.22] tracking-tight text-white drop-shadow-md">
             “Stronger security starts with everyday decisions.”
           </blockquote>
-          <figcaption className="text-xs uppercase tracking-wider text-[#8B8B95] font-medium font-mono">
+          <figcaption className="text-xs uppercase tracking-wider text-zinc-400 font-medium font-mono">
             CyberShield · Enterprise Human Risk & Defense
           </figcaption>
         </figure>
