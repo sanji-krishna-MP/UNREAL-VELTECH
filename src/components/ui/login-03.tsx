@@ -3,54 +3,100 @@
 import * as React from 'react';
 import { Shield, Mail, Lock, ArrowRight, AlertCircle, UserCheck } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-const FloatingPaths = ({ position }: { position: number }) => {
+/**
+ * Animated Flowing Silver Ribbon Artwork
+ * Features two overlapping groups of 32 smooth SVG cubic curves each (~64 paths total).
+ * Curves enter from beyond the left edge, sweep gracefully through the middle/lower panel,
+ * and flow toward the lower-right edge with varied curvature, spacing, silver stroke (#D4D4D8),
+ * 0.25–0.55 stroke opacity, and 0.7–1.4px stroke widths.
+ */
+const RibbonContourGroup = ({
+  groupIndex,
+  baseDuration,
+}: {
+  groupIndex: number;
+  baseDuration: number;
+}) => {
   const reduceMotion = useReducedMotion();
-  const paths = Array.from({ length: 32 }, (_, i) => ({
-    id: i,
-    d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
-      380 - i * 5 * position
-    } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
-      152 - i * 5 * position
-    } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
-      684 - i * 5 * position
-    } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-    width: 0.5 + i * 0.03,
-  }));
+  const count = 34;
+
+  const paths = React.useMemo(() => {
+    return Array.from({ length: count }, (_, i) => {
+      // Offset calculations to create layered flowing ribbons
+      const offsetFactor = i / count;
+      const groupShift = groupIndex === 1 ? 0 : 45;
+
+      // Cubic Bézier curve entering beyond the left edge (-120 to -60)
+      // sweeping through middle/lower panel, and exiting toward lower-right (1000 to 1100, 650 to 800)
+      const startX = -120 - i * 4;
+      const startY = 80 + i * 14 + groupShift;
+
+      const cp1X = 220 + i * 8 - (groupIndex === 1 ? 20 : 0);
+      const cp1Y = 240 + i * 9 + (groupIndex === 1 ? 10 : -25);
+
+      const cp2X = 520 - i * 6 + groupShift;
+      const cp2Y = 460 + i * 8;
+
+      const endX = 1050 + i * 8;
+      const endY = 560 + i * 11 + groupShift;
+
+      const d = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
+      
+      // Stroke widths from 0.7px to 1.4px
+      const strokeWidth = 0.75 + offsetFactor * 0.65;
+      
+      // Stroke opacity tuned between 0.25 and 0.52 for visible, elegant silver lines
+      const opacity = 0.24 + offsetFactor * 0.28;
+
+      return {
+        id: `${groupIndex}-${i}`,
+        d,
+        strokeWidth,
+        opacity,
+        duration: baseDuration + ((i * 7) % 7) * 0.8,
+      };
+    });
+  }, [groupIndex, baseDuration]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <svg
-        className="h-full w-full text-zinc-400"
-        fill="none"
-        viewBox="0 0 696 316"
-        preserveAspectRatio="none"
-      >
-        {paths.map((path) => (
-          <motion.path
-            key={path.id}
-            d={path.d}
-            initial={{ pathLength: 0.3 }}
-            animate={
-              reduceMotion
-                ? undefined
-                : { pathLength: 1, pathOffset: [0, 1, 0] }
-            }
-            stroke="currentColor"
-            className="opacity-40"
-            strokeOpacity={0.06 + path.id * 0.02}
-            strokeWidth={path.width}
-            transition={{
-              duration: 24 + ((path.id * 17) % 15),
-              repeat: Number.POSITIVE_INFINITY,
-              ease: 'linear',
-            }}
-          />
-        ))}
-      </svg>
-    </div>
+    <svg
+      className="absolute inset-0 h-full w-full pointer-events-none select-none"
+      fill="none"
+      viewBox="0 0 1000 700"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      {paths.map((p) => (
+        <motion.path
+          key={p.id}
+          d={p.d}
+          stroke="#D4D4D8"
+          strokeWidth={p.strokeWidth}
+          strokeOpacity={p.opacity}
+          strokeLinecap="round"
+          initial={reduceMotion ? { pathLength: 1, pathOffset: 0 } : { pathLength: 0.35, pathOffset: 0 }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  pathLength: [0.35, 0.95, 0.35],
+                  pathOffset: [0, 1, 0],
+                }
+          }
+          transition={
+            reduceMotion
+              ? undefined
+              : {
+                  duration: p.duration,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: 'easeInOut',
+                }
+          }
+        />
+      ))}
+    </svg>
   );
 };
 
@@ -77,27 +123,29 @@ export function Login03View({
 }: LoginProps) {
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#09090B] lg:grid lg:grid-cols-2">
-      {/* Left Charcoal Brand Panel */}
-      <aside className="relative hidden h-full flex-col justify-between overflow-hidden border-r border-[#28282D] bg-[#141416] p-12 lg:flex">
-        {/* Fine Contour Lines */}
-        <div className="absolute inset-0">
-          <FloatingPaths position={1} />
-          <FloatingPaths position={-1} />
+      {/* Left Charcoal Brand Panel with Enhanced Silver Ribbon Artwork */}
+      <aside className="relative hidden h-full flex-col justify-between overflow-hidden border-r border-[#28282D] bg-[#141416] p-12 xl:p-14 lg:flex">
+        {/* Layer 1 & 2: Overlapping Flowing Silver Curves (68 paths total) */}
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Group 1: Cycle ~22–26s */}
+          <RibbonContourGroup groupIndex={1} baseDuration={24} />
+          {/* Group 2: Cycle ~27–31s */}
+          <RibbonContourGroup groupIndex={2} baseDuration={28} />
         </div>
 
-        {/* Ambient Gradient Over Contour Lines */}
+        {/* Localized Readability Gradient behind quote */}
         <div
-          aria-hidden
+          aria-hidden="true"
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'linear-gradient(to bottom, rgba(20,20,22,0.3) 0%, rgba(20,20,22,0.7) 60%, #141416 100%)',
+              'linear-gradient(to bottom, rgba(20,20,22,0.1) 0%, rgba(20,20,22,0.4) 50%, rgba(20,20,22,0.85) 90%, #141416 100%)',
           }}
         />
 
         {/* Top Brand Identity */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-[#1B1B1F] border border-[#28282D] flex items-center justify-center text-zinc-100">
+          <div className="w-8 h-8 rounded-md bg-[#1B1B1F] border border-[#28282D] flex items-center justify-center text-zinc-100 shadow-sm">
             <Shield className="w-4 h-4" />
           </div>
           <div className="flex flex-col">
@@ -110,13 +158,13 @@ export function Login03View({
           </div>
         </div>
 
-        {/* Serif Statement at Lower Portion */}
-        <figure className="relative z-10 mt-auto flex flex-col gap-4">
-          <blockquote className="font-serif text-3xl xl:text-4xl leading-[1.2] tracking-tight text-zinc-100">
+        {/* Serif Statement at Lower Portion (Intentional 2-3 line layout) */}
+        <figure className="relative z-10 mt-auto flex flex-col gap-4 max-w-lg">
+          <blockquote className="font-serif text-3xl xl:text-4xl 2xl:text-[44px] leading-[1.22] tracking-tight text-zinc-100 drop-shadow-sm">
             “Stronger security starts with everyday decisions.”
           </blockquote>
-          <figcaption className="text-xs uppercase tracking-wider text-[#8B8B95] font-medium">
-            CyberShield · Human Risk & Awareness
+          <figcaption className="text-xs uppercase tracking-wider text-[#8B8B95] font-medium font-mono">
+            CyberShield · Enterprise Human Risk & Defense
           </figcaption>
         </figure>
       </aside>
@@ -159,7 +207,7 @@ export function Login03View({
                 Corporate email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#8B8B95] absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-[#8B8B95] absolute left-3 top-3 pointer-events-none" />
                 <input
                   type="email"
                   value={email}
@@ -176,7 +224,7 @@ export function Login03View({
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#8B8B95] absolute left-3 top-3" />
+                <Lock className="w-4 h-4 text-[#8B8B95] absolute left-3 top-3 pointer-events-none" />
                 <input
                   type="password"
                   value={password}

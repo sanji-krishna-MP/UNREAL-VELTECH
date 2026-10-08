@@ -14,6 +14,14 @@ import {
 } from 'lucide-react';
 import { HviMetrics } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { OrganizationRiskChart } from '@/components/charts/OrganizationRiskChart';
+import { DepartmentRiskChart } from '@/components/charts/DepartmentRiskChart';
+import { SampleRiskBreakdown } from '@/components/charts/SampleRiskBreakdown';
+import {
+  PAYROLL_SAMPLE_SUMMARY,
+  ENGINEERING_SAMPLE_SUMMARY,
+  SAMPLE_DAILY_OUTCOMES,
+} from '@/lib/sample-analytics';
 
 export default function OfficerDashboard() {
   const router = useRouter();
@@ -25,6 +33,10 @@ export default function OfficerDashboard() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [departmentStats, setDepartmentStats] = useState<any[]>([]);
   const [showFormulaModal, setShowFormulaModal] = useState(false);
+
+  // Deterministic sample daily cohorts for the department charts
+  const payrollCohorts = SAMPLE_DAILY_OUTCOMES.filter((r) => r.department === 'Payroll');
+  const engineeringCohorts = SAMPLE_DAILY_OUTCOMES.filter((r) => r.department === 'Engineering');
 
   const fetchDashboardData = async () => {
     try {
@@ -100,8 +112,8 @@ export default function OfficerDashboard() {
       breadcrumbs={[{ label: 'Command Center' }, { label: 'Security Overview' }]}
       actions={headerActions}
     >
-      <div className="space-y-8">
-        {/* Page Title & Context */}
+      <div className="space-y-9">
+        {/* 1. Page Title & Context */}
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-100">
             Human Vulnerability Console
@@ -117,7 +129,7 @@ export default function OfficerDashboard() {
           </div>
         )}
 
-        {/* Top 4 KPI Metrics Grid */}
+        {/* 2. Top 4 LIVE KPI Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* 1. Human Vulnerability Index */}
           <div className="rounded-lg bg-[#111113] border border-[#28282D] p-5 flex flex-col justify-between">
@@ -289,18 +301,56 @@ export default function OfficerDashboard() {
           </div>
         )}
 
-        {/* Department Vulnerability Profiles */}
+        {/* 3. RISK ANALYTICS PREVIEW SECTION */}
+        <section className="space-y-6 pt-1">
+          {/* Section Heading & Persistent Description */}
+          <div className="space-y-1.5 pb-2 border-b border-[#28282D]">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-100">
+                Risk analytics preview
+              </h2>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-[#1B1B1F] text-zinc-300 border border-[#28282D]">
+                Sample data
+              </span>
+            </div>
+            <p className="text-xs text-[#8B8B95]">
+              Illustrative sample data for Payroll and Engineering. These charts do not represent your live campaign results.
+            </p>
+          </div>
+
+          {/* 4. Full-width Organization Risk Overview Chart */}
+          <OrganizationRiskChart />
+
+          {/* 5. Two Department Chart Panels (Side by side on desktop, stacked on mobile) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <DepartmentRiskChart
+              department="Payroll"
+              summary={PAYROLL_SAMPLE_SUMMARY}
+              dailyCohorts={payrollCohorts}
+            />
+            <DepartmentRiskChart
+              department="Engineering"
+              summary={ENGINEERING_SAMPLE_SUMMARY}
+              dailyCohorts={engineeringCohorts}
+            />
+          </div>
+
+          {/* 6. Compact Sample Risk Breakdown and Interpretation */}
+          <SampleRiskBreakdown />
+        </section>
+
+        {/* 7. LIVE DEPARTMENT RESULTS (Existing Live Department Profiles) */}
         <div className="rounded-lg bg-[#111113] border border-[#28282D] p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-zinc-100">
-                Department Vulnerability Profiles
+                Live department results
               </h2>
               <p className="text-xs text-[#8B8B95] mt-0.5">
-                Aggregated cohort breakdown across active corporate units.
+                Aggregated live cohort breakdown across active corporate units from database.
               </p>
             </div>
-            <span className="text-[11px] font-mono text-[#8B8B95]">
+            <span className="text-[11px] font-mono text-[#8B8B95] px-2 py-0.5 rounded bg-[#1B1B1F] border border-[#28282D]">
               Live Aggregates
             </span>
           </div>
@@ -357,13 +407,18 @@ export default function OfficerDashboard() {
           </div>
         </div>
 
-        {/* Simulated Defense Campaigns Table */}
+        {/* 8. LIVE CAMPAIGNS TABLE */}
         <div className="rounded-lg bg-[#111113] border border-[#28282D] p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100">
-                Simulated Defense Campaigns
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-zinc-100">
+                  Live campaigns
+                </h2>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1B1B1F] text-zinc-400 border border-[#28282D]">
+                  Database Telemetry
+                </span>
+              </div>
               <p className="text-xs text-[#8B8B95] mt-0.5">
                 Active and completed mock phishing engagements.
               </p>
@@ -372,7 +427,7 @@ export default function OfficerDashboard() {
               href="/campaigns/new"
               className="text-xs text-zinc-300 hover:text-white flex items-center gap-1 font-medium transition-colors"
             >
-              New campaign &rarr;
+              New simulation &rarr;
             </Link>
           </div>
 

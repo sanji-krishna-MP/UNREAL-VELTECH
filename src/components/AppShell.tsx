@@ -244,8 +244,8 @@ export function AppShell({
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full">
+        {/* Page Content - Full available width beside sidebar */}
+        <main className="flex-1 p-6 sm:p-8 w-full min-w-0">
           {children}
         </main>
       </div>
