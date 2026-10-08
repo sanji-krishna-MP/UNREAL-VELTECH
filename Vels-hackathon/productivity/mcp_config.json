@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "codebase-memory-mcp": {
+      "command": "C:/Users/sanji krishna mp/.local/bin/codebase-memory-mcp.exe",
+      "args": []
+    },
+    "graphify": {
+      "command": "python",
+      "args": ["-m", "graphify.serve", "graphify-out/graph.json"]
+    },
+    "ui-skills": {
+      "command": "node",
+      "args": ["D:/Vels-hackathon/productivity/ui-skills-mcp/index.mjs"]
+    },
+    "ui-skills-remote": {
+      "serverUrl": "https://www.ui-skills.com/mcp"
+    }
+  }
+}
