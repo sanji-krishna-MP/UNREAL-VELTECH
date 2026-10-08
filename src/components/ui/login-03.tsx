@@ -51,7 +51,8 @@ const RibbonContourGroup = ({
         d,
         strokeWidth,
         opacity,
-        duration: baseDuration + ((i * 5) % 6) * 1.2,
+        // Increased movement speed: 6s–9s per cycle
+        duration: baseDuration + ((i * 3) % 5) * 0.5,
       };
     });
   }, [groupIndex, baseDuration]);
@@ -72,7 +73,7 @@ const RibbonContourGroup = ({
           strokeWidth={p.strokeWidth}
           strokeOpacity={p.opacity}
           strokeLinecap="round"
-          initial={{ pathLength: 1, pathOffset: 0 }}
+          initial={{ pathLength: 0.9, pathOffset: 0 }}
           animate={
             reduceMotion
               ? undefined
@@ -120,12 +121,12 @@ export function Login03View({
     <section className="relative min-h-screen overflow-hidden bg-[#09090B] lg:grid lg:grid-cols-2">
       {/* Left Charcoal Brand Panel with Bold Flowing Silver Ribbon Artwork */}
       <aside className="relative hidden h-full flex-col justify-between overflow-hidden border-r border-[#28282D] bg-[#141416] p-12 xl:p-14 lg:flex">
-        {/* Layer 1 & 2: Overlapping Flowing Silver Curves (68 bold paths total) */}
+        {/* Layer 1 & 2: Overlapping Fast-Flowing Silver Curves (68 bold paths total) */}
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Group 1: 34 bold silver paths, cycle 24s */}
-          <RibbonContourGroup groupIndex={1} baseDuration={24} />
-          {/* Group 2: 34 crisp platinum paths, cycle 28s */}
-          <RibbonContourGroup groupIndex={2} baseDuration={28} />
+          {/* Group 1: 34 bold silver paths, swift cycle 6.5s */}
+          <RibbonContourGroup groupIndex={1} baseDuration={6.5} />
+          {/* Group 2: 34 crisp platinum paths, swift cycle 8.0s */}
+          <RibbonContourGroup groupIndex={2} baseDuration={8.0} />
         </div>
 
         {/* Top Brand Identity */}
