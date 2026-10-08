@@ -9,9 +9,10 @@ const createCampaignSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   scenario: z.string().min(1, 'Scenario is required'),
   target_department_id: z
-    .union([z.string().uuid(), z.literal(''), z.null()])
+    .string()
+    .nullable()
     .optional()
-    .transform((v) => (v && v.trim() !== '' ? v : null)),
+    .transform((v) => (v && v.trim() !== '' && v !== 'null' && v !== 'undefined' ? v.trim() : null)),
   default_difficulty: z.enum(['introductory', 'intermediate', 'advanced']),
   response_deadline: z.string().transform((v) => {
     const d = new Date(v);
@@ -50,6 +51,22 @@ export async function POST(request: Request) {
     const data = parseResult.data;
     const supabase = await createClient();
 
+    let resolvedDeptId: string | null = null;
+    if (data.target_department_id) {
+      if (/^[0-9a-fA-F-]{36}$/.test(data.target_department_id)) {
+        resolvedDeptId = data.target_department_id;
+      } else {
+        const { data: deptMatch } = await supabase
+          .from('departments')
+          .select('id')
+          .eq('organization_id', session.profile.organization_id)
+          .ilike('name', `%${data.target_department_id}%`)
+          .limit(1)
+          .maybeSingle();
+        resolvedDeptId = deptMatch?.id || null;
+      }
+    }
+
     const { data: campaign, error } = await supabase
       .from('campaigns')
       .insert({
@@ -57,7 +74,7 @@ export async function POST(request: Request) {
         created_by: session.user.id,
         title: data.title,
         scenario: data.scenario,
-        target_department_id: data.target_department_id || null,
+        target_department_id: resolvedDeptId,
         default_difficulty: data.default_difficulty,
         status: 'draft',
         response_deadline: data.response_deadline,

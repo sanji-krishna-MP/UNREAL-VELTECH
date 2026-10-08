@@ -9,9 +9,10 @@ const updateDraftSchema = z.object({
   title: z.string().optional(),
   scenario: z.string().optional(),
   target_department_id: z
-    .union([z.string().uuid(), z.literal(''), z.null()])
+    .string()
+    .nullable()
     .optional()
-    .transform((v) => (v && v.trim() !== '' ? v : null)),
+    .transform((v) => (v && v.trim() !== '' && v !== 'null' && v !== 'undefined' ? v.trim() : null)),
   default_difficulty: z.enum(['introductory', 'intermediate', 'advanced']).optional(),
   response_deadline: z
     .string()
@@ -125,9 +126,25 @@ export async function PATCH(
       );
     }
 
+    const updateData: any = { ...parseResult.data };
+    if (updateData.target_department_id !== undefined) {
+      if (!updateData.target_department_id) {
+        updateData.target_department_id = null;
+      } else if (!/^[0-9a-fA-F-]{36}$/.test(updateData.target_department_id)) {
+        const { data: deptMatch } = await supabase
+          .from('departments')
+          .select('id')
+          .eq('organization_id', session.profile.organization_id)
+          .ilike('name', `%${updateData.target_department_id}%`)
+          .limit(1)
+          .maybeSingle();
+        updateData.target_department_id = deptMatch?.id || null;
+      }
+    }
+
     const { data: updated, error: updateErr } = await supabase
       .from('campaigns')
-      .update(parseResult.data)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
