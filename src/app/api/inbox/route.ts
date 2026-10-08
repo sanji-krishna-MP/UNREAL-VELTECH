@@ -45,7 +45,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch inbox' }, { status: 500 });
     }
 
-    return NextResponse.json({ deliveries });
+    const filteredDeliveries = (deliveries || []).filter(
+      (d: any) => !d.campaign?.title?.startsWith('Live Verification Simulation')
+    );
+
+    return NextResponse.json({ deliveries: filteredDeliveries });
   } catch (error: any) {
     if (error.message?.includes('Forbidden') || error.message?.includes('Authentication')) {
       return NextResponse.json({ error: error.message }, { status: 403 });

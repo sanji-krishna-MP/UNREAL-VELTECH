@@ -115,6 +115,7 @@ export async function GET() {
         )
       `)
       .eq('organization_id', session.profile.organization_id)
+      .not('title', 'ilike', 'Live Verification Simulation%')
       .order('created_at', { ascending: false });
 
     if (error) {

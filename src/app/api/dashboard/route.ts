@@ -14,8 +14,19 @@ export async function GET() {
     // 1. Fetch all launched campaigns for this organization
     const { data: campaigns, error: campErr } = await supabase
       .from('campaigns')
-      .select('id, title, scenario, status, default_difficulty, response_deadline, created_at, launched_at')
+      .select(`
+        id,
+        title,
+        scenario,
+        status,
+        default_difficulty,
+        response_deadline,
+        created_at,
+        launched_at,
+        deliveries(id)
+      `)
       .eq('organization_id', orgId)
+      .not('title', 'ilike', 'Live Verification Simulation%')
       .order('created_at', { ascending: false });
 
     if (campErr) {
