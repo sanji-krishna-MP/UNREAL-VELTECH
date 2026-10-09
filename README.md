@@ -219,4 +219,4 @@ It creates test records. Run it only against a database where those records are 
 
 ## MVP boundaries
 
-CyberShield currently uses an internal simulation inbox and two seeded departments. Real email or SMS delivery, employee imports, notifications, and advanced historical analytics are outside the first MVP. Any illustrative charts should be labeled **Sample data** and kept separate from live database metrics.
+CyberShield currently uses an internal simulation inbox and two seeded departments. Real email or SMS delivery, employee imports, notifications, and advanced historical analytics are outside the first MVP. Any illustrative charts should be labeled **Sample data** and kept separate from live database metices.
